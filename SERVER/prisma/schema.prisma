@@ -15,3 +15,13 @@ model User {
   role      String   // 'guest' or 'owner'
   createdAt DateTime @default(now())
 }
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  title       String
+  amount      Float
+  category    String
+  date        DateTime @default(now())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+}
