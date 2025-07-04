@@ -7,21 +7,161 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Sample model for guest/owner
-model User {
-  id        Int      @id @default(autoincrement())
+model PG {
+  id            Int           @id @default(autoincrement())
+  name          String
+  address       String
+  city          String?
+  rentDueDay    Int
+  ownerId       Int
+  owner         User          @relation("OwnerPGs", fields: [ownerId], references: [id])
+  floors        Floor[]
+  beds          Bed[]
+  guests        User[]        @relation("PGGuests")
+  expenses      Expense[]
+  payments      Payment[]
+  issues        Issue[]
+  menus         Menu[]
+  notifications Notification[]
+ isActive   Boolean   @default(true) // system-controlled (block if unpaid)
+  createdAt     DateTime      @default(now())
+}
+
+model Floor {
+  id        Int     @id @default(autoincrement())
   name      String
-  phone     String   @unique
-  role      String   // 'guest' or 'owner'
+  pgId      Int
+  pg        PG      @relation(fields: [pgId], references: [id])
+  rooms     Room[]
+}
+
+model Room {
+  id         Int     @id @default(autoincrement())
+  number     String
+  floorId    Int
+  sharing    Int      // 2, 3, 4 sharing
+  isAC       Boolean
+  floor      Floor    @relation(fields: [floorId], references: [id])
+  beds       Bed[]
+}
+
+model Bed {
+  id         Int     @id @default(autoincrement())
+  label      String
+  roomId     Int
+  pgId       Int
+  guestId    Int?
+  isOccupied Boolean  @default(false)
+  rent       Float
+  facilities String    // comma or JSON string
+  room       Room     @relation(fields: [roomId], references: [id])
+  pg         PG       @relation(fields: [pgId], references: [id])
+  guest      User?    @relation(fields: [guestId], references: [id])
+  payments   Payment[]
+}
+
+model User {
+  id         Int        @id @default(autoincrement())
+  name       String
+  email      String     @unique
+  password   String
+  phone      String?
+  role       String     // "owner" | "guest"
+  deviceToken  String?
+  pgId       Int?
+  pg         PG?        @relation("PGGuests", fields: [pgId], references: [id])
+  ownedPGs   PG[]       @relation("OwnerPGs")
+  bed        Bed[]      @relation("UserBed")
+  payments   Payment[]
+  issues     Issue[]
+  createdAt  DateTime   @default(now())
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  bedId     Int
+  pgId      Int
+  amount    Float
+  month     String   // e.g., "2025-07"
+  status    String   // "paid", "due"
+  user      User     @relation(fields: [userId], references: [id])
+  bed       Bed      @relation(fields: [bedId], references: [id])
+  pg        PG       @relation(fields: [pgId], references: [id])
   createdAt DateTime @default(now())
 }
 
 model Expense {
-  id          Int      @id @default(autoincrement())
-  title       String
-  amount      Float
-  category    String
-  date        DateTime @default(now())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
+  id        Int      @id @default(autoincrement())
+  title     String
+  amount    Float
+  category  String
+  pgId      Int
+  pg        PG       @relation(fields: [pgId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Issue {
+  id        Int      @id @default(autoincrement())
+  message   String
+  status    String
+  userId    Int
+  pgId      Int
+  user      User     @relation(fields: [userId], references: [id])
+  pg        PG       @relation(fields: [pgId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Menu {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  items     String   // Text or JSON
+  imageUrl  String?  // ✅ Optional image link
+  pgId      Int
+  pg        PG       @relation(fields: [pgId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  pgId      Int
+  pg        PG       @relation(fields: [pgId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model SubscriptionPlan {
+  id        Int      @id @default(autoincrement())
+  name      String   // Free, Basic, Pro
+  price     Float
+  duration  Int      // in days
+  maxPGs    Int?
+  maxBeds   Int?
+  features  String   // JSON list (optional)
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  planId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  plan       SubscriptionPlan @relation(fields: [planId], references: [id])
+  status     String   // "active", "expired", "cancelled"
+  startDate  DateTime
+  endDate    DateTime
+  createdAt  DateTime @default(now())
+}
+
+model Enquiry {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String
+  email     String
+  pgName    String
+  city      String
+  status    String   @default("pending")  // pending | approved | rejected
+  createdAt DateTime @default(now())
 }

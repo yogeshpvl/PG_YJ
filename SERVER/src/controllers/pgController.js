@@ -1,4 +1,4 @@
-const prisma = require('../config/prisma');
+const prisma = require('../config/db');
 
 exports.createPG = async (req, res) => {
   const { name, address, ownerId } = req.body;
