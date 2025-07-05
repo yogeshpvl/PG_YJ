@@ -1,22 +1,43 @@
+
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const morgan = require('morgan');
 
 const authRoutes = require('./routes/authRoutes');
 const pgRoutes = require('./routes/pgRoutes');
-const { errorHandler } = require('./middlewares/errorHandler');
+// const floorRoutes = require('./routes/floorRoutes');
+// const roomRoutes = require('./routes/roomRoutes');
+// const bedRoutes = require('./routes/bedRoutes');
+// const paymentRoutes = require('./routes/paymentRoutes');
+// const expenseRoutes = require('./routes/expenseRoutes');
+// const notificationRoutes = require('./routes/notifiationRoutes');
+// const enquiryRoutes = require('./routes/enquiryRoutes');
+// const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 const app = express();
 
-app.use(cors());
+// Middleware
 app.use(express.json());
+app.use(cors());
+app.use(helmet());
 app.use(morgan('dev'));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/pgs', pgRoutes);
+// app.use('/api/floors', floorRoutes);
+// app.use('/api/rooms', roomRoutes);
+// app.use('/api/beds', bedRoutes);
+// app.use('/api/payments', paymentRoutes);
+// app.use('/api/expenses', expenseRoutes);
+// app.use('/api/notifications', notificationRoutes);
+// app.use('/api/enquiries', enquiryRoutes);
+// app.use('/api/subscriptions', subscriptionRoutes);
 
-// Global Error Handler
-app.use(errorHandler);
+// Default Route
+app.get('/', (req, res) => {
+  res.send('PG SaaS Server Running');
+});
 
 module.exports = app;

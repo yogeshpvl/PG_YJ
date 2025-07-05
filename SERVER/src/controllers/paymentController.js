@@ -1,4 +1,4 @@
-const prisma = require('../config/prisma');
+const prisma = require('../config/db');
 
 exports.addPayment = async (req, res) => {
   const { amount, month, userId } = req.body;

@@ -1,4 +1,4 @@
-const prisma = require('../config/prisma');
+const prisma = require('../config/db');
 
 exports.addRoom = async (req, res) => {
   const { pgId, roomNo, floor, capacity } = req.body;
