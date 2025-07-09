@@ -2,10 +2,7 @@ const express = require('express');
 const router = express.Router();
 const paymentController = require('../controllers/paymentController');
 
-// Add a payment
-router.post('/add', paymentController.addPayment);
-
-// Get all payments
-router.get('/all', paymentController.getPayments);
+router.post('/', paymentController.createPayment);
+router.get('/:pgId', paymentController.getPayments);
 
 module.exports = router;

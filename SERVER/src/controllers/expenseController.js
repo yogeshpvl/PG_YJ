@@ -4,15 +4,24 @@ const prisma = new PrismaClient();
 // Create expense
 exports.createExpense = async (req, res) => {
   try {
-    const { title, amount, category, userId } = req.body;
+    const { title, amount, category, userId, pgId } = req.body;
+
     const expense = await prisma.expense.create({
-      data: { title, amount: parseFloat(amount), category, userId },
+      data: {
+        title,
+        amount: parseFloat(amount),
+        category,
+        userId: Number(userId),
+        pgId: Number(pgId),
+      },
     });
-    res.json(expense);
+
+    res.status(201).json(expense);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // Get all expenses
 exports.getExpenses = async (req, res) => {
@@ -45,6 +54,36 @@ exports.deleteExpense = async (req, res) => {
     const { id } = req.params;
     await prisma.expense.delete({ where: { id: Number(id) } });
     res.json({ message: 'Expense deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get all expenses by a specific user
+exports.getExpensesByUser = async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+
+    const expenses = await prisma.expense.findMany({
+      where: { userId },
+    });
+
+    res.json(expenses);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get all expenses by a specific PG
+exports.getExpensesByPG = async (req, res) => {
+  try {
+    const pgId = Number(req.params.pgId);
+
+    const expenses = await prisma.expense.findMany({
+      where: { pgId },
+    });
+
+    res.json(expenses);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -74,6 +74,7 @@ model User {
   bed           Bed[]          @relation("UserBed")
   payments      Payment[]
   issues        Issue[]
+  expenses      Expense[]
   subscriptions Subscription[]
   createdAt     DateTime       @default(now())
 }
@@ -93,14 +94,17 @@ model Payment {
 }
 
 model Expense {
-  id        Int      @id @default(autoincrement())
-  title     String
-  amount    Float
-  category  String
-  pgId      Int
-  pg        PG       @relation(fields: [pgId], references: [id])
-  createdAt DateTime @default(now())
+  id       Int     @id @default(autoincrement())
+  title    String
+  amount   Float
+  category String
+  pgId     Int
+  pg       PG      @relation(fields: [pgId], references: [id])
+
+  userId   Int?    // 👈 make optional
+  user     User?   @relation(fields: [userId], references: [id])
 }
+
 
 model Issue {
   id        Int      @id @default(autoincrement())

@@ -9,7 +9,7 @@ const { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, 
 exports.submitEnquiry = async (req, res) => {
   const { name, phone, email, pgName, city } = req.body;
 
-  const enquiry = await prisma.enquiry.create({
+  const enquiry = await prisma.Enquiry.create({
     data: { name, phone, email, pgName, city },
   });
 

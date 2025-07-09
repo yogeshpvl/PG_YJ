@@ -6,13 +6,14 @@ const morgan = require('morgan');
 
 const authRoutes = require('./routes/authRoutes');
 const pgRoutes = require('./routes/pgRoutes');
-// const floorRoutes = require('./routes/floorRoutes');
-// const roomRoutes = require('./routes/roomRoutes');
-// const bedRoutes = require('./routes/bedRoutes');
-// const paymentRoutes = require('./routes/paymentRoutes');
-// const expenseRoutes = require('./routes/expenseRoutes');
+const floorRoutes = require('./routes/floorRoutes');
+const roomRoutes = require('./routes/roomRoutes');
+const bedRoutes = require('./routes/bedRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
+const menuRoutes = require('./routes/menuRoutes');
 // const notificationRoutes = require('./routes/notifiationRoutes');
-// const enquiryRoutes = require('./routes/enquiryRoutes');
+const enquiryRoutes = require('./routes/enquiryRoutes');
 // const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 const app = express();
@@ -26,13 +27,13 @@ app.use(morgan('dev'));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/pgs', pgRoutes);
-// app.use('/api/floors', floorRoutes);
-// app.use('/api/rooms', roomRoutes);
-// app.use('/api/beds', bedRoutes);
-// app.use('/api/payments', paymentRoutes);
-// app.use('/api/expenses', expenseRoutes);
-// app.use('/api/notifications', notificationRoutes);
-// app.use('/api/enquiries', enquiryRoutes);
+app.use('/api/floors', floorRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/beds', bedRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/menus', menuRoutes);
+app.use('/api/enquiries', enquiryRoutes);
 // app.use('/api/subscriptions', subscriptionRoutes);
 
 // Default Route

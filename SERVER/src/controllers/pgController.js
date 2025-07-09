@@ -20,6 +20,7 @@ exports.createPG = async (req, res) => {
 exports.getOwnerPGs = async (req, res) => {
   try {
     const ownerId = req.user.id;
+    console.log("ownerId",ownerId)
 
     const pgs = await prisma.pG.findMany({
       where: { ownerId }

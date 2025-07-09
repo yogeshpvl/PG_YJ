@@ -10,8 +10,11 @@ const { authenticateUser } = require('../middlewares/authmiddleware');
 // Public route
 router.post('/submit', submitEnquiry);
 
-// Admin routes
-router.get('/', authenticateUser, listEnquiries);
-router.post('/approve', authenticateUser, approveEnquiry);
+// // Admin routes
+// router.get('/', authenticateUser, listEnquiries);
+// router.post('/approve', authenticateUser, approveEnquiry);
+router.get('/',  listEnquiries);
+router.post('/approve',  approveEnquiry);
+
 
 module.exports = router;
