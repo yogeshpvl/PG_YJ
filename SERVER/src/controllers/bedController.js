@@ -64,3 +64,70 @@ exports.assignGuestToBed = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+// Update Bed
+exports.updateBed = async (req, res) => {
+  try {
+    const bedId = parseInt(req.params.id);
+    const { label, rent, facilities, roomId, pgId } = req.body;
+
+    const updatedBed = await prisma.bed.update({
+      where: { id: bedId },
+      data: {
+        label,
+        rent: parseFloat(rent),
+        facilities,
+        roomId,
+        pgId
+      }
+    });
+
+    res.json(updatedBed);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Delete Bed
+exports.deleteBed = async (req, res) => {
+  try {
+    const bedId = parseInt(req.params.id);
+
+    await prisma.bed.delete({
+      where: { id: bedId },
+    });
+
+    res.json({ message: 'Bed deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+// Bulk Upload Beds
+exports.bulkUploadBeds = async (req, res) => {
+  try {
+    const { pgId, roomId, beds } = req.body;
+
+    if (!Array.isArray(beds) || beds.length === 0) {
+      return res.status(400).json({ error: 'Beds must be a non-empty array' });
+    }
+
+    const created = await prisma.bed.createMany({
+      data: beds.map(bed => ({
+        label: bed.label,
+        roomId,
+        pgId,
+        rent: parseFloat(bed.rent),
+        facilities: bed.facilities || null,
+        isOccupied: false,
+      })),
+      skipDuplicates: true
+    });
+
+    res.status(201).json({ message: 'Beds added successfully', count: created.count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

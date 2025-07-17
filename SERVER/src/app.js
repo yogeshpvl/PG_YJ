@@ -12,7 +12,10 @@ const bedRoutes = require('./routes/bedRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const menuRoutes = require('./routes/menuRoutes');
-// const notificationRoutes = require('./routes/notifiationRoutes');
+const userRoutes = require('./routes/userRoutes');
+const guestPolicyRoutes = require('./routes/guestPolicyRoutes');
+const noticeRoutes = require('./routes/noticeRoutes');
+
 const enquiryRoutes = require('./routes/enquiryRoutes');
 // const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
@@ -34,7 +37,10 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/menus', menuRoutes);
 app.use('/api/enquiries', enquiryRoutes);
-// app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/policy', guestPolicyRoutes);
+app.use('/api/notice', noticeRoutes);
+
 
 // Default Route
 app.get('/', (req, res) => {

@@ -4,11 +4,11 @@ const prisma = new PrismaClient();
 // Create expense
 exports.createExpense = async (req, res) => {
   try {
-    const { title, amount, category, userId, pgId } = req.body;
+    const { description, amount, category, userId, pgId } = req.body;
 
     const expense = await prisma.expense.create({
       data: {
-        title,
+        description,
         amount: parseFloat(amount),
         category,
         userId: Number(userId),

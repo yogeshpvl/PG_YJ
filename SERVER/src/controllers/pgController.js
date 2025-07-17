@@ -3,11 +3,11 @@ const prisma = require('../config/db');
 // Create PG
 exports.createPG = async (req, res) => {
   try {
-    const { name, address, city, rentDueDay } = req.body;
+    const { name, address, city, rentDueDay ,pincode} = req.body;
     const ownerId = req.user.id;
 
     const pg = await prisma.pG.create({
-      data: { name, address, city, rentDueDay, ownerId }
+      data: { name, address, city, rentDueDay, ownerId,pincode }
     });
 
     res.status(201).json(pg);

@@ -72,3 +72,5 @@ exports.addGuestToPG = async (req, res) => {
 
   res.status(201).json({ message: 'Guest created', guestId: guest.id });
 };
+
+
