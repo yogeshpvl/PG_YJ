@@ -1,31 +1,100 @@
+// src/controllers/paymentController.js
 const prisma = require('../config/db');
 
 exports.createPayment = async (req, res) => {
   try {
-    const { amount, date, month, guestId, pgId, status } = req.body;
+    const { amount, date, month, guestId, pgId, status, paidDate } = req.body;
     const payment = await prisma.payment.create({
-      data: {
-        amount: parseFloat(amount),
-        date: new Date(date),
-        month,
-        guestId,
-        pgId,
-        status,
-      },
+      data: { amount, date: new Date(date), month, guestId, pgId, status, paidDate: paidDate ? new Date(paidDate) : null },
     });
     res.status(201).json(payment);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-// Get all payments for PG
-exports.getPayments = async (req, res) => {
+exports.getAllPayments = async (req, res) => {
   try {
-    const pgId = parseInt(req.params.pgId);
-    const payments = await prisma.payment.findMany({ where: { pgId } });
+    const { pgId, guestId, month, startDate, endDate } = req.query;
+    const filters = {};
+
+    if (pgId) filters.pgId = parseInt(pgId);
+    if (guestId) filters.guestId = parseInt(guestId);
+    if (month) filters.month = month;
+    if (startDate && endDate) {
+      filters.date = {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      };
+    }
+
+    const payments = await prisma.payment.findMany({
+      where: filters,
+      include: {
+        guest: {
+          select: {
+            name: true,
+            bed: {
+              select: {
+                number: true,
+                room: {
+                  select: {
+                    name: true,
+                    floor: {
+                      select: { name: true }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        date: 'desc'
+      }
+    });
+
     res.json(payments);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getPaymentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payment = await prisma.payment.findUnique({
+      where: { id: parseInt(id) },
+      include: { guest: true }
+    });
+    if (!payment) return res.status(404).json({ error: 'Payment not found' });
+    res.json(payment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updatePayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, date, month, guestId, pgId, status, paidDate } = req.body;
+    const payment = await prisma.payment.update({
+      where: { id: parseInt(id) },
+      data: { amount, date: new Date(date), month, guestId, pgId, status, paidDate: paidDate ? new Date(paidDate) : null },
+    });
+    res.json(payment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.deletePayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.payment.delete({ where: { id: parseInt(id) } });
+    res.json({ message: 'Payment deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

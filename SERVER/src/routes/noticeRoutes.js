@@ -1,9 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/noticeController');
+const {
+  createNoticeRequest,
+  getNoticeRequests,
+  approveOrRejectNotice
+} = require('../controllers/noticeController');
 
-router.post('/notice-request', controller.createNotice);
-router.put('/notice-request/approve/:id', controller.approveNotice);
-router.get('/notice/pg/:pgId', controller.getNoticesByPG);
+const { protect } = require('../middlewares/authmiddleware');
+const restrictTo = require('../middlewares/rolemiddleware');
+
+// Guest creates notice
+router.post('/', protect, createNoticeRequest);
+
+// Owner views notices
+router.get('/', protect, restrictTo(['owner']), getNoticeRequests);
+
+// Owner approves/rejects
+router.patch('/:id/approve', protect, restrictTo(['owner']), approveOrRejectNotice);
 
 module.exports = router;

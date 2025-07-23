@@ -1,8 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const paymentController = require('../controllers/paymentController');
+const paymentCtrl = require('../controllers/paymentController');
 
-router.post('/', paymentController.createPayment);
-router.get('/:pgId', paymentController.getPayments);
+// Add Payment
+router.post('/create', paymentCtrl.createPayment);
+
+// Get All Payments (PG ID)
+router.get('/pg/:pgId', paymentCtrl.getPayments);
+
+// Update Payment Status
+router.patch('/:paymentId/status', paymentCtrl.updatePaymentStatus);
+
+// Filter Payments
+router.get('/pg/:pgId/filter', paymentCtrl.filterPayments);
+
+// Get Rent Dues for Month
+router.get('/dues', paymentCtrl.getRentDues);
 
 module.exports = router;

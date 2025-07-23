@@ -3,21 +3,31 @@ const router = express.Router();
 const {
   createExpense,
   getExpenses,
+  getMyExpenses,
+  getExpensesByPG,
   updateExpense,
   deleteExpense,
-  getExpensesByUser,
-  getExpensesByPG
+  getFilteredExpenses
 } = require('../controllers/expenseController');
+const { protect } = require('../middlewares/authmiddleware');
 
+// Create Expense
+router.post('/', protect, createExpense);
 
-// Create, Update, Delete
-router.post('/', createExpense);
+// Get all expenses (admin)
 router.get('/', getExpenses);
-router.put('/:id', updateExpense);
-router.delete('/:id', deleteExpense);
 
-// New routes
-router.get('/user/:userId', getExpensesByUser);
-router.get('/pg/:pgId', getExpensesByPG);
+// Get logged-in user’s expenses
+router.get('/my', protect, getMyExpenses);
+
+// Get expenses by PG ID
+router.get('/pg/:pgId', protect, getExpensesByPG);
+
+// Update expense
+router.put('/:id', protect, updateExpense);
+
+// Delete expense
+router.delete('/:id', protect, deleteExpense);
+router.get('/pg/:pgId/filter',protect, getFilteredExpenses);
 
 module.exports = router;

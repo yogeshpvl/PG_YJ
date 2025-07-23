@@ -3,11 +3,18 @@ const prisma = require('../config/db');
 // Create PG
 exports.createPG = async (req, res) => {
   try {
-    const { name, address, city, rentDueDay ,pincode} = req.body;
+    const { name, address, city, rentDueDay, pincode } = req.body;
     const ownerId = req.user.id;
 
+    // 1. Create the PG
     const pg = await prisma.pG.create({
-      data: { name, address, city, rentDueDay, ownerId,pincode }
+      data: { name, address, city, rentDueDay, ownerId, pincode }
+    });
+
+    // 2. Update the User table with the new pgId
+    await prisma.user.update({
+      where: { id: ownerId },
+      data: { pgId: pg.id }
     });
 
     res.status(201).json(pg);
@@ -15,6 +22,7 @@ exports.createPG = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Get all PGs of owner
 exports.getOwnerPGs = async (req, res) => {

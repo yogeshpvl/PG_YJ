@@ -1,90 +1,157 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/db');
 
-// Create expense
-exports.createExpense = async (req, res) => {
+// Create Expense
+const createExpense = async (req, res) => {
   try {
-    const { description, amount, category, userId, pgId } = req.body;
+    const { amount, description, pgId, category, date } = req.body;
+    const userId = req.user.id;
+
+    // Validate date
+    const parsedDate = date ? new Date(date) : new Date();
+    if (isNaN(parsedDate)) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
 
     const expense = await prisma.expense.create({
       data: {
+        amount,
         description,
-        amount: parseFloat(amount),
         category,
-        userId: Number(userId),
-        pgId: Number(pgId),
+        pgId,
+        userId,
+        date: parsedDate,
       },
     });
 
     res.status(201).json(expense);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 
-
-// Get all expenses
-exports.getExpenses = async (req, res) => {
+// Get All Expenses (for admin)
+const getExpenses = async (req, res) => {
   try {
     const expenses = await prisma.expense.findMany();
-    res.json(expenses);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(200).json({ success: true, data: expenses });
+  } catch (error) {
+    console.error('Get All Expenses Error:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
 
-// Update expense
-exports.updateExpense = async (req, res) => {
+// Get Expenses by Authenticated User
+const getMyExpenses = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { title, amount, category } = req.body;
-    const expense = await prisma.expense.update({
-      where: { id: Number(id) },
-      data: { title, amount: parseFloat(amount), category },
-    });
-    res.json(expense);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// Delete expense
-exports.deleteExpense = async (req, res) => {
-  try {
-    const { id } = req.params;
-    await prisma.expense.delete({ where: { id: Number(id) } });
-    res.json({ message: 'Expense deleted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// Get all expenses by a specific user
-exports.getExpensesByUser = async (req, res) => {
-  try {
-    const userId = Number(req.params.userId);
+    const userId = req.user.id;
 
     const expenses = await prisma.expense.findMany({
       where: { userId },
     });
 
-    res.json(expenses);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(200).json({ success: true, data: expenses });
+  } catch (error) {
+    console.error('Get My Expenses Error:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
 
-// Get all expenses by a specific PG
-exports.getExpensesByPG = async (req, res) => {
+// Get Expenses by PG ID
+const getExpensesByPG = async (req, res) => {
   try {
-    const pgId = Number(req.params.pgId);
+    const { pgId } = req.params;
 
     const expenses = await prisma.expense.findMany({
-      where: { pgId },
+      where: { pgId: parseInt(pgId) },
     });
 
-    res.json(expenses);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(200).json({ success: true, data: expenses });
+  } catch (error) {
+    console.error('Get Expenses by PG Error:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
+};
+
+// Update Expense
+const updateExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, title, date } = req.body;
+
+    const expense = await prisma.expense.update({
+      where: { id: parseInt(id) },
+      data: {
+        amount: parseFloat(amount),
+        title,
+        date: new Date(date),
+      },
+    });
+
+    res.status(200).json({ success: true, data: expense });
+  } catch (error) {
+    console.error('Update Expense Error:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+// Delete Expense
+const deleteExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.expense.delete({
+      where: { id: parseInt(id) },
+    });
+
+    res.status(200).json({ success: true, message: 'Expense deleted' });
+  } catch (error) {
+    console.error('Delete Expense Error:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+const getFilteredExpenses = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { pgId } = req.params;
+    const { category, startDate, endDate } = req.query;
+
+    const where = {
+      userId,
+      pgId: Number(pgId),
+      ...(category && { category }),
+      ...(startDate && endDate && {
+        createdAt: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
+      }),
+    };
+
+    const expenses = await prisma.expense.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const totalAmount = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+    res.status(200).json({
+      totalAmount,
+      count: expenses.length,
+      expenses,
+    });
+  } catch (err) {
+    console.error('Error filtering expenses:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = {
+  createExpense,
+  getExpenses,
+  getMyExpenses,
+  getExpensesByPG,
+  updateExpense,
+  deleteExpense,
+  getFilteredExpenses
 };

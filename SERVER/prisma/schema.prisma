@@ -32,7 +32,7 @@ model PG {
 
 model Floor {
   id    Int    @id @default(autoincrement())
-  name  String
+  name  String @unique
   pgId  Int
   pg    PG     @relation(fields: [pgId], references: [id])
   rooms Room[]
@@ -86,29 +86,33 @@ model User {
 
 model Payment {
   id        Int      @id @default(autoincrement())
-  userId    Int
-  bedId     Int
-  pgId      Int
   amount    Float
-  month     String // e.g., "2025-07"
-  status    String // "paid", "due"
-  user      User     @relation(fields: [userId], references: [id])
-  bed       Bed      @relation(fields: [bedId], references: [id])
+  date      DateTime // When rent is due
+  month     String
+  userId   Int
+  guest     User     @relation(fields: [userId], references: [id])
+  pgId      Int
   pg        PG       @relation(fields: [pgId], references: [id])
+  status    String   // "paid", "due", etc.
+  paidDate  DateTime? // 👈 Nullable: only set when payment is made
   createdAt DateTime @default(now())
 }
 
+
 model Expense {
-  id          Int    @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   description String
   amount      Float
   category    String
   pgId        Int
-  pg          PG     @relation(fields: [pgId], references: [id])
-
-  userId Int? // 👈 make optional
-  user   User? @relation(fields: [userId], references: [id])
+  pg          PG       @relation(fields: [pgId], references: [id])
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+  date        DateTime?
+  createdAt   DateTime @default(now()) // 👈 Add this
 }
+
+
 
 model Issue {
   id        Int      @id @default(autoincrement())
@@ -189,12 +193,14 @@ model GuestPolicy {
 
 model NoticeRequest {
   id         Int      @id @default(autoincrement())
-  guestId    Int
+  reason     String
+  userId     Int
   pgId       Int
-  reason     String?
-  status     String   @default("Pending")
-  noticeDate DateTime @default(now())
+  status     String   @default("pending")
+  noticeDate DateTime
+  createdAt  DateTime @default(now())
 
-  guest User @relation("UserNotices", fields: [guestId], references: [id])
-  pg    PG   @relation("PGNotices", fields: [pgId], references: [id])
+  // Add the correct relation names here
+  user User @relation("UserNotices", fields: [userId], references: [id])
+  pg   PG   @relation("PGNotices", fields: [pgId], references: [id])
 }
