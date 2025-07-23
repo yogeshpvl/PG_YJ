@@ -113,31 +113,98 @@ exports.getPGSummary = async (req, res) => {
     const pgId = parseInt(req.params.id);
     const ownerId = req.user.id;
 
-    const [bedStats, payments, expenses, issues] = await Promise.all([
+    const [
+      bedStats,
+      occupiedBedsCount,
+      paidPayments,
+      totalExpenses,
+      pendingIssues,
+      noticePeriodGuests,
+      rentPaidCount,
+      rentDueCount,
+      maintenanceRequests
+    ] = await Promise.all([
+
+      // 1. Total beds and rent
       prisma.bed.aggregate({
         where: { pgId },
         _count: { id: true },
         _sum: { rent: true }
       }),
+
+      // 2. Occupied beds
+      prisma.bed.count({
+        where: { pgId, isOccupied: true }
+      }),
+
+      // 3. Total paid amount
       prisma.payment.aggregate({
         where: { pgId, status: 'paid' },
         _sum: { amount: true }
       }),
+
+      // 4. Total expenses
       prisma.expense.aggregate({
         where: { pgId },
         _sum: { amount: true }
       }),
-      prisma.issue.findMany({ where: { pgId, status: 'pending' } })
+
+      // 5. Pending issues (all types)
+      prisma.issue.findMany({
+        where: { pgId, status: 'pending' }
+      }),
+
+      // 6. Guests in notice period
+      prisma.noticeRequest.count({
+        where: {
+          pgId,
+          status: 'Pending', // You could add noticeDate > today if needed
+        }
+      }),
+
+      // 7. Count of paid rent records
+      prisma.payment.count({
+        where: { pgId, status: 'paid' }
+      }),
+
+      // 8. Count of due rent records
+      prisma.payment.count({
+        where: { pgId, status: 'due' }
+      }),
+
+      // 9. Count of maintenance requests (issues with keyword)
+      prisma.issue.count({
+        where: {
+          pgId,
+          status: 'pending',
+          message: {
+            contains: 'maintain', // you can tune this logic
+            mode: 'insensitive'
+          }
+        }
+      })
     ]);
 
+    const totalBeds = bedStats._count.id;
+    const occupiedBeds = occupiedBedsCount;
+    const availableBeds = totalBeds - occupiedBeds;
+
     res.json({
-      totalBeds: bedStats._count.id,
+      totalBeds,
+      occupiedBeds,
+      availableBeds,
       totalRent: bedStats._sum.rent || 0,
-      revenue: payments._sum.amount || 0,
-      expenses: expenses._sum.amount || 0,
-      pendingIssues: issues.length
+      revenue: paidPayments._sum.amount || 0,
+      expenses: totalExpenses._sum.amount || 0,
+      pendingIssues: pendingIssues.length,
+      noticePeriodGuests,
+      rentPaid: rentPaidCount,
+      rentDue: rentDueCount,
+      maintenanceRequests
     });
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };

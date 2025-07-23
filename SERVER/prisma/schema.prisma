@@ -24,6 +24,7 @@ model PG {
   issues        Issue[]
   menus         Menu[]
   notifications Notification[]
+  complaints    Complaint[]
   isActive      Boolean         @default(true) // system-controlled (block if unpaid)
   guestPolicies GuestPolicy[]   @relation("PGGuestPolicies")
   notices       NoticeRequest[] @relation("PGNotices")
@@ -39,14 +40,15 @@ model Floor {
 }
 
 model Room {
-  id      Int     @id @default(autoincrement())
-  number  String
-  floorId Int
-  sharing Int // 2, 3, 4 sharing
-  isAC    Boolean
-  floor   Floor   @relation(fields: [floorId], references: [id])
-  beds    Bed[]
+  id        Int      @id @default(autoincrement())
+  number    String
+  floorId   Int
+  sharing   Int       // 2, 3, 4 sharing
+  amenities Json?     // Stores ["AC", "TV", "WiFi"]
+  floor     Floor     @relation(fields: [floorId], references: [id])
+  beds      Bed[]
 }
+
 
 model Bed {
   id         Int       @id @default(autoincrement())
@@ -56,11 +58,11 @@ model Bed {
   guestId    Int?
   isOccupied Boolean   @default(false)
   rent       Float
-  facilities String? // comma or JSON string
+  facilities String?
   room       Room      @relation(fields: [roomId], references: [id])
   pg         PG        @relation(fields: [pgId], references: [id])
   guest      User?     @relation("UserBed", fields: [guestId], references: [id])
-  payments   Payment[]
+  payments   Payment[] @relation("BedPayments") // ✅ FIXED
 }
 
 model User {
@@ -79,40 +81,41 @@ model User {
   issues        Issue[]
   expenses      Expense[]
   subscriptions Subscription[]
+  complaints    Complaint[]
   guestPolicy   GuestPolicy?    @relation("UserGuestPolicy") // ✅ add this
   notices       NoticeRequest[] @relation("UserNotices") // ✅ add this
   createdAt     DateTime        @default(now())
 }
 
 model Payment {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   amount    Float
-  date      DateTime // When rent is due
+  date      DateTime
   month     String
-  userId   Int
-  guest     User     @relation(fields: [userId], references: [id])
+  userId    Int
+  guest     User      @relation(fields: [userId], references: [id])
   pgId      Int
-  pg        PG       @relation(fields: [pgId], references: [id])
-  status    String   // "paid", "due", etc.
-  paidDate  DateTime? // 👈 Nullable: only set when payment is made
-  createdAt DateTime @default(now())
+  pg        PG        @relation(fields: [pgId], references: [id])
+  status    String
+  paidDate  DateTime?
+  createdAt DateTime  @default(now())
+
+  bedId Int? // ✅ ADD THIS
+  bed   Bed? @relation("BedPayments", fields: [bedId], references: [id]) // ✅ ADD THIS
 }
 
-
 model Expense {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   description String
   amount      Float
   category    String
   pgId        Int
-  pg          PG       @relation(fields: [pgId], references: [id])
+  pg          PG        @relation(fields: [pgId], references: [id])
   userId      Int?
-  user        User?    @relation(fields: [userId], references: [id])
+  user        User?     @relation(fields: [userId], references: [id])
   date        DateTime?
-  createdAt   DateTime @default(now()) // 👈 Add this
+  createdAt   DateTime  @default(now()) // 👈 Add this
 }
-
-
 
 model Issue {
   id        Int      @id @default(autoincrement())
@@ -203,4 +206,18 @@ model NoticeRequest {
   // Add the correct relation names here
   user User @relation("UserNotices", fields: [userId], references: [id])
   pg   PG   @relation("PGNotices", fields: [pgId], references: [id])
+}
+
+model Complaint {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  status      String   @default("pending") // "pending" | "resolved"
+  createdAt   DateTime @default(now())
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id])
+
+  pgId Int?
+  pg   PG?  @relation(fields: [pgId], references: [id])
 }

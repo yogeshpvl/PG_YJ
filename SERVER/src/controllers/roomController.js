@@ -3,9 +3,9 @@ const prisma = require('../config/db');
 // Create Room
 exports.createRoom = async (req, res) => {
   try {
-    const { number, floorId, sharing, isAC } = req.body;
+    const { number, floorId, sharing, amenities  } = req.body;
     const room = await prisma.room.create({
-      data: { number, floorId, sharing, isAC }
+      data: { number, floorId, sharing, amenities  }
     });
     res.status(201).json(room);
   } catch (err) {
