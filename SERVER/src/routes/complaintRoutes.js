@@ -3,7 +3,7 @@ const router = express.Router();
 const complaintCtrl = require('../controllers/complaintController');
 const { protect } = require('../middlewares/authmiddleware');
 // Create a complaint
-router.post('/create', complaintCtrl.createComplaint);
+router.post('/create', protect,complaintCtrl.createComplaint);
 
 // Get complaints by user ID
 router.get('/user',protect, complaintCtrl.getUserComplaints);

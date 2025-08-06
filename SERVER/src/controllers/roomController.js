@@ -10,8 +10,8 @@ exports.createRoom = async (req, res) => {
     res.status(201).json(room);
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-};
+    }
+  };
 
 // Generate Beds for a Room based on Sharing
 exports.generateBedsForRoom = async (req, res) => {
@@ -140,27 +140,42 @@ exports.deleteRoom = async (req, res) => {
   }
 };
 
+
+
 // Bulk Upload Rooms
 exports.bulkUploadRooms = async (req, res) => {
   try {
-    const { floorId, rooms } = req.body;
+    const floorRoomGroups = req.body;
 
-    if (!Array.isArray(rooms) || rooms.length === 0) {
-      return res.status(400).json({ error: 'Rooms must be a non-empty array' });
+    if (!Array.isArray(floorRoomGroups) || floorRoomGroups.length === 0) {
+      return res.status(400).json({ error: 'Input must be a non-empty array of floor-room groups' });
     }
 
-    const newRooms = await prisma.room.createMany({
-      data: rooms.map(room => ({
-        number: room.number,
-        floorId,
-        sharing: room.sharing,
-        isAC: room.isAC || false
-      })),
-      skipDuplicates: true // optional
-    });
+    let totalInserted = 0;
 
-    res.status(201).json({ message: 'Rooms added successfully', count: newRooms.count });
+    for (const group of floorRoomGroups) {
+      const { floorId, rooms } = group;
+
+      if (!floorId || !Array.isArray(rooms) || rooms.length === 0) {
+        continue; // Skip invalid entries
+      }
+
+      const result = await prisma.room.createMany({
+        data: rooms.map(room => ({
+          number: room.number,
+          floorId,
+          sharing: room.sharing,
+          amenities: room.amenities || [],
+        })),
+        skipDuplicates: true,
+      });
+
+      totalInserted += result.count;
+    }
+
+    res.status(201).json({ message: 'Rooms added successfully', totalInserted });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };

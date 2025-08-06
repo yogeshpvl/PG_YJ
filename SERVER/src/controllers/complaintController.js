@@ -3,7 +3,8 @@ const prisma = require('../config/db');
 // Create a complaint
 exports.createComplaint = async (req, res) => {
   try {
-    const { title, description, userId, pgId } = req.body;
+    const { title, description,  pgId } = req.body;
+     const userId = req.user.id;
     const complaint = await prisma.complaint.create({
       data: { title, description, userId, pgId }
     });

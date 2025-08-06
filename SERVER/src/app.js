@@ -3,6 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+require('./cron/deleteOldNotices');
+const generateMonthlyPayments = require('./utils/scheduler'); // or the correct path
+
+generateMonthlyPayments(); 
 
 const authRoutes = require('./routes/authRoutes');
 const pgRoutes = require('./routes/pgRoutes');

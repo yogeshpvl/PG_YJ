@@ -1,11 +1,11 @@
-// src/controllers/paymentController.js
+
 const prisma = require('../config/db');
 
 exports.createPayment = async (req, res) => {
   try {
-    const { amount, date, month, guestId, pgId, status, paidDate } = req.body;
+    const { amount, date, month, userId, pgId, status, paidDate,bedId } = req.body;
     const payment = await prisma.payment.create({
-      data: { amount, date: new Date(date), month, guestId, pgId, status, paidDate: paidDate ? new Date(paidDate) : null },
+      data: { amount, date: new Date(date),bedId, month, userId, pgId, status, paidDate: paidDate ? new Date(paidDate) : null },
     });
     res.status(201).json(payment);
   } catch (err) {
@@ -15,11 +15,11 @@ exports.createPayment = async (req, res) => {
 
 exports.getAllPayments = async (req, res) => {
   try {
-    const { pgId, guestId, month, startDate, endDate } = req.query;
+    const { pgId, userId, month, startDate, endDate } = req.query;
     const filters = {};
 
     if (pgId) filters.pgId = parseInt(pgId);
-    if (guestId) filters.guestId = parseInt(guestId);
+    if (userId) filters.userId = parseInt(userId);
     if (month) filters.month = month;
     if (startDate && endDate) {
       filters.date = {
@@ -78,10 +78,10 @@ exports.getPaymentById = async (req, res) => {
 exports.updatePayment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { amount, date, month, guestId, pgId, status, paidDate } = req.body;
+    const { amount, date, month, userId, pgId, status, paidDate } = req.body;
     const payment = await prisma.payment.update({
       where: { id: parseInt(id) },
-      data: { amount, date: new Date(date), month, guestId, pgId, status, paidDate: paidDate ? new Date(paidDate) : null },
+      data: { amount, date: new Date(date), month, userId, pgId, status, paidDate: paidDate ? new Date(paidDate) : null },
     });
     res.json(payment);
   } catch (err) {

@@ -113,7 +113,7 @@ model Expense {
   pg          PG        @relation(fields: [pgId], references: [id])
   userId      Int?
   user        User?     @relation(fields: [userId], references: [id])
-  date        DateTime?
+   date        DateTime @default(now())
   createdAt   DateTime  @default(now()) // 👈 Add this
 }
 
@@ -125,6 +125,16 @@ model Issue {
   pgId      Int
   user      User     @relation(fields: [userId], references: [id])
   pg        PG       @relation(fields: [pgId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model NoticeBoard {
+  id        Int      @id @default(autoincrement())
+  title      String
+  description    String
+  imageUrl String?
+  userId    Int
+  pgId      Int
   createdAt DateTime @default(now())
 }
 

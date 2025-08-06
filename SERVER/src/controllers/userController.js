@@ -30,7 +30,7 @@ exports.getMyProfile = async (req, res) => {
               select: {
                 number: true,
                 sharing: true,
-                isAC: true,
+        
                 floor: {
                   select: {
                     name: true
