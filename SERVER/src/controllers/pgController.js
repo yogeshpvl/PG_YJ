@@ -107,11 +107,29 @@ exports.deactivatePG = async (req, res) => {
   }
 };
 
-// PG Analytics Summary
 exports.getPGSummary = async (req, res) => {
   try {
     const pgId = parseInt(req.params.id);
-    const ownerId = req.user.id;
+    const { month } = req.query; // expects format: "2025-08"
+
+    let startDate, endDate;
+
+    if (month) {
+      const [year, monthStr] = month.split("-");
+      const m = parseInt(monthStr);
+      const y = parseInt(year);
+
+      startDate = new Date(y, m - 1, 1); // first day of month
+      endDate = new Date(y, m, 0, 23, 59, 59, 999); // last day of month
+    }
+
+    const paymentDateFilter = month
+      ? { date: { gte: startDate, lte: endDate } }
+      : {};
+
+    const expenseDateFilter = month
+      ? { date: { gte: startDate, lte: endDate } }
+      : {};
 
     const [
       bedStats,
@@ -124,63 +142,50 @@ exports.getPGSummary = async (req, res) => {
       rentDueCount,
       maintenanceRequests
     ] = await Promise.all([
-
-      // 1. Total beds and rent
       prisma.bed.aggregate({
         where: { pgId },
         _count: { id: true },
         _sum: { rent: true }
       }),
 
-      // 2. Occupied beds
       prisma.bed.count({
         where: { pgId, isOccupied: true }
       }),
 
-      // 3. Total paid amount
       prisma.payment.aggregate({
-        where: { pgId, status: 'paid' },
+        where: { pgId, status: 'paid', ...paymentDateFilter },
         _sum: { amount: true }
       }),
 
-      // 4. Total expenses
       prisma.expense.aggregate({
-        where: { pgId },
+        where: { pgId, ...expenseDateFilter },
         _sum: { amount: true }
       }),
 
-      // 5. Pending issues (all types)
       prisma.issue.findMany({
         where: { pgId, status: 'pending' }
       }),
 
-      // 6. Guests in notice period
       prisma.noticeRequest.count({
         where: {
           pgId,
-          status: 'Pending', // You could add noticeDate > today if needed
+          status: 'Pending'
         }
       }),
 
-      // 7. Count of paid rent records
       prisma.payment.count({
-        where: { pgId, status: 'paid' }
+        where: { pgId, status: 'paid', ...paymentDateFilter }
       }),
 
-      // 8. Count of due rent records
       prisma.payment.count({
-        where: { pgId, status: 'due' }
+        where: { pgId, status: 'unpaid', ...paymentDateFilter }
       }),
 
-      // 9. Count of maintenance requests (issues with keyword)
-      prisma.issue.count({
+      prisma.complaint.count({
         where: {
           pgId,
           status: 'pending',
-          message: {
-            contains: 'maintain', // you can tune this logic
-            mode: 'insensitive'
-          }
+         
         }
       })
     ]);
@@ -208,6 +213,8 @@ exports.getPGSummary = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
 
 // Owner Dashboard (Monthly Revenue, Occupancy, etc.)
 exports.getPGDashboard = async (req, res) => {

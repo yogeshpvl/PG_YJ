@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const upload = multer(); // no disk storage; handled in memory
-const protect = require('../middlewares/auth');
-const noticeCtrl = require('../controllers/noticeBoardController');
+const upload = multer(); 
+const {protect} = require('../middlewares/authmiddleware');
+const noticeCtrl = require('../controllers/noticeBoard');
 
-router.post('/create', protect, upload.single('image'), noticeCtrl.createNotice);
+
+router.post('/create',  upload.single('image'), noticeCtrl.createNotice);
+router.put('/edit/:id', protect, upload.single('image'), noticeCtrl.editNotice);
+
 router.get('/:pgId', protect, noticeCtrl.getNoticesByPG);
 router.delete('/:id', protect, noticeCtrl.deleteNotice);
 

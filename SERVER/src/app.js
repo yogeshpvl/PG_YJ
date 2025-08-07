@@ -21,6 +21,8 @@ const guestPolicyRoutes = require('./routes/guestPolicyRoutes');
 const noticeRoutes = require('./routes/noticeRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const enquiryRoutes = require('./routes/enquiryRoutes');
+const noticeboardRoutes = require('./routes/noticeBoard');
+
 // const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 const app = express();
@@ -45,6 +47,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/policy', guestPolicyRoutes);
 app.use('/api/notice', noticeRoutes);
 app.use('/api/complaints', complaintRoutes);  
+app.use('/api/noticeboard', noticeboardRoutes);  
+
 
 
 // Default Route
